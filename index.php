@@ -256,12 +256,6 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 				wp_die( __( 'Nonce verification has failed', 'edd' ), __( 'Error', 'edd' ), array( 'response' => 403 ) );
 			}
 			
-			/*echo '<pre>';
-			print_r($purchase_data);
-			print_r($_SERVER);
-			echo '</pre>';
-			die();*/
-			
 			// Add contact number in user_info array.
 			$purchase_data['user_info']['contact_number'] = $purchase_data['post_data']['contact_number'];
 			
@@ -309,16 +303,22 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 				$merchant_refID = $this->generate_merchant_ref_ID();
 				
 				// Checksum Method.
-				$checksum_method = 'MD5';
+				$checksum_method = 'SHA256';
+				
+				// Convert amount into paisa.
+				$amount = ( intval( $purchase_data['price'] ) * 100 );
+
+				// String to generate checksum.
+				$checksum_string = $merchant_id. '|'. $edd_options['shmart_apikey']. '|'. $_SERVER['SERVER_ADDR']. '|'. $merchant_refID . '|'. edd_get_currency() .'|'. $amount. '|'. $checksum_method. '|'. 1;
 				
 				// Generate checksum.
-				$checksum = md5( $edd_options['shmart_merchant_id']. '|'. $edd_options['shmart_apikey']. '|'. $_SERVER['SERVER_ADDR']. '|'. $merchant_id . '|'. edd_get_currency() .'|'. $purchase_data['price']. '|'. $checksum_method. '|'. get_current_user_id() );
+				$checksum = hash_hmac('sha256', $checksum_string, $edd_options['shmart_secret_key'] );
 				
 				// Setup Shamrt arguments
 				$shamrt_args = array(
 					'apikey'        		=> $edd_options['shmart_apikey'],
 					'currency_code' 		=> edd_get_currency(),
-					'amount'        		=> 100, //( intval( $purchase_data['price'] ) * 100 ),
+					'amount'        		=> $amount,
 					'merchant_refID' 		=> $merchant_refID,
 					'merchant_id'  			=> $merchant_id,
 					'checksum_method'		=> $checksum_method,
@@ -336,14 +336,10 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 					'rurl'        			=> $return_url,
 					'furl' 					=> edd_get_failed_transaction_uri( '?payment-id=' . $payment ),
 					'surl'    				=> $listener_url,
+					'authorize_user'		=> 1,
 				);
 
 				$shamrt_args = apply_filters( 'edd_shmart_redirect_args', $shamrt_args, $purchase_data );
-				
-				 /*echo '<pre>';
-				print_r($shamrt_args);
-				echo '</pre>';
-				die();*/
 				
 				echo '<form action="'.$shmart_redirect.'" method="POST" name="shmartForm">';
 				
