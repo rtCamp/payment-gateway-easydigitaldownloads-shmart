@@ -90,6 +90,9 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 			// Get Resposne from shmart.
 			add_action( 'init', array( &$this, 'get_response_from_shmart' ) );
 			
+			// Process shmart response.
+			add_action( 'verify_shmart_response', array( &$this, 'process_shmart_response' ) );
+			
 		}
 		
 		/**
@@ -269,7 +272,7 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 				'downloads'     => $purchase_data['downloads'],
 				'user_info'     => $purchase_data['user_info'],
 				'cart_details'  => $purchase_data['cart_details'],
-				'gateway'       => 'paypal',
+				'gateway'       => 'shmart',
 				'status'        => 'pending'
 			);
 			
@@ -284,14 +287,14 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 				edd_send_back_to_checkout( '?payment-mode=' . $purchase_data['post_data']['edd-gateway'] );
 			} else {
 				// Only send to Shmart if the pending payment is created successfully
-				$listener_url = add_query_arg( 'edd-listener', 'SHMART_RESPONSE', home_url( 'index.php' ) );
+				//$listener_url = add_query_arg( 'edd-listener', 'SHMART_RESPONSE', home_url( 'index.php' ) );
 			
 				// Get the success url
-				$return_url = add_query_arg( array(
-						'payment-confirmation' => 'shmart',
+				$listener_url = add_query_arg( array(
+						'edd-listener' => 'SHMART_RESPONSE',
 						'payment-id' => $payment
 			
-				), get_permalink( $edd_options['success_page'] ) );
+				), home_url( 'index.php' ) );
 			
 				// Get the Shmart redirect uri
 				$shmart_redirect = trailingslashit( $this->get_shmart_redirect() );
@@ -303,16 +306,17 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 				$merchant_refID = $this->generate_merchant_ref_ID();
 				
 				// Checksum Method.
-				$checksum_method = 'SHA256';
+				$checksum_method = 'MD5';
 				
 				// Convert amount into paisa.
 				$amount = ( intval( $purchase_data['price'] ) * 100 );
 
 				// String to generate checksum.
-				$checksum_string = $merchant_id. '|'. $edd_options['shmart_apikey']. '|'. $_SERVER['SERVER_ADDR']. '|'. $merchant_refID . '|'. edd_get_currency() .'|'. $amount. '|'. $checksum_method. '|'. 1;
+				$checksum_string = $edd_options['shmart_secret_key'].$merchant_id. '|'. $edd_options['shmart_apikey']. '|'. $_SERVER['SERVER_ADDR']. '|'. $merchant_refID . '|'. edd_get_currency() .'|'. $amount. '|'. $checksum_method. '|'. 1;
 				
 				// Generate checksum.
-				$checksum = hash_hmac('sha256', $checksum_string, $edd_options['shmart_secret_key'] );
+				//$checksum = hash_hmac('sha256', $checksum_string, $edd_options['shmart_secret_key'] );
+				$checksum = md5( $checksum_string );
 				
 				// Setup Shamrt arguments
 				$shamrt_args = array(
@@ -333,7 +337,7 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 					'zipcode'       		=> $purchase_data['user_info']['address']['zip'],
 					'country'       		=> $purchase_data['user_info']['address']['country'],
 					'show_shipping_addr'    => 0,
-					'rurl'        			=> $return_url,
+					'rurl'        			=> get_permalink( $edd_options['success_page'] ),
 					'furl' 					=> edd_get_failed_transaction_uri( '?payment-id=' . $payment ),
 					'surl'    				=> $listener_url,
 					'authorize_user'		=> 1,
@@ -365,10 +369,63 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 		
 			// Regular Shmart Response
 			if ( isset( $_GET['edd-listener'] ) && $_GET['edd-listener'] == 'SHMART_RESPONSE' ) {
-				$myfile = fopen("response.txt", "w") or die("Unable to open file!");
-				fwrite($myfile, serialize($_POST));
-				fclose($myfile);
+				
+				do_action( 'verify_shmart_response' );
 			}
+		}
+		
+		/**
+		 * process Shmart response and then redirect to purchase confirmation page.
+		 * @global $edd_options Array of all the EDD Options
+		 * @return void
+		 */
+		public function process_shmart_response() {
+			global $edd_options;
+			
+			// Get all response data coming from shamrt.
+			$post_data = $_POST;
+			
+			// Get payment id.
+			$payment_id = $_GET['payment-id'];
+			
+			// Get Payment status code.
+			$payment_status_code = intval( $post_data['status'] );
+			
+			if( empty( $payment_id ) ) {
+				return;
+			}
+			
+			if ( edd_get_payment_gateway( $payment_id ) != 'shmart' ) {
+				return; // this isn't a shmart response.
+			}
+			
+			// create payment note.
+			$payment_note = sprintf( __( 'Shmart Reference ID: %s      Merchant Reference ID: %s', 'edd' ) , $post_data['shmart_refID'], $post_data['merchant_refID'] );
+			$payment_note .= '     Message: '.$post_data['status_msg'];
+			
+			if( $payment_status_code == 0 ) {
+				
+				edd_insert_payment_note( $payment_id,  $payment_note);
+				edd_set_payment_transaction_id( $payment_id, $post_data['shmart_refID'] );
+				edd_update_payment_status( $payment_id, 'publish' );
+				
+				$confirm_url = add_query_arg( array(
+					'payment-confirmation' => 'shmart',
+					'payment-id' => $payment_id
+				), get_permalink( $edd_options['success_page'] ) );
+
+				wp_redirect( $confirm_url );
+			}
+			else {
+			
+				edd_insert_payment_note( $payment_id, $payment_note);
+				edd_set_payment_transaction_id( $payment_id, $post_data['shmart_refID'] );
+				edd_update_payment_status( $payment_id, 'failed' );
+				
+				wp_redirect( edd_get_failed_transaction_uri( '?payment-id=' . $payment_id ) );
+			}
+			
+			die();
 		}
 	}
 	
