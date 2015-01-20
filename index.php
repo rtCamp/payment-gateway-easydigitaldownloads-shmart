@@ -93,6 +93,9 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 			// Process shmart response.
 			add_action( 'verify_shmart_response', array( &$this, 'process_shmart_response' ) );
 			
+			// Process if shmart payment is failed.
+			add_action( 'template_redirect', array( &$this, 'shmart_listen_for_failed_payments' ), 20 );
+			
 		}
 		
 		/**
@@ -400,12 +403,12 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 			}
 			
 			// create payment note.
-			$payment_note = sprintf( __( 'Shmart Reference ID: %s      Merchant Reference ID: %s', 'edd' ) , $post_data['shmart_refID'], $post_data['merchant_refID'] );
-			$payment_note .= '     Message: '.$post_data['status_msg'];
+			$payment_note = sprintf( __( 'Shmart Reference ID: %s <br> Merchant Reference ID: %s', 'edd' ) , $post_data['shmart_refID'], $post_data['merchant_refID'] );
+			$payment_note .= '<br> Message: '.$post_data['status_msg'];
 			
 			if( $payment_status_code == 0 ) {
 				
-				edd_insert_payment_note( $payment_id,  $payment_note);
+				edd_insert_payment_note( $payment_id,  $payment_note );
 				edd_set_payment_transaction_id( $payment_id, $post_data['shmart_refID'] );
 				edd_update_payment_status( $payment_id, 'publish' );
 				
@@ -418,7 +421,7 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 			}
 			else {
 			
-				edd_insert_payment_note( $payment_id, $payment_note);
+				edd_insert_payment_note( $payment_id, $payment_note );
 				edd_set_payment_transaction_id( $payment_id, $post_data['shmart_refID'] );
 				edd_update_payment_status( $payment_id, 'failed' );
 				
@@ -426,6 +429,29 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 			}
 			
 			die();
+		}
+		
+		/**
+		 * Mark payments as Failed when returning to the Failed Transaction page
+		 * @return      void
+		 */
+		public function shmart_listen_for_failed_payments() {
+
+			$failed_page = edd_get_option( 'failure_page', 0 );
+
+			if( ! empty( $failed_page ) && is_page( $failed_page ) && ! empty( $_GET['payment-id'] ) ) {
+			
+				$payment_id = absint( $_GET['payment-id'] );
+				
+				if( ! empty( $_POST ) ) {
+					// create payment note for failed transaction.
+					$payment_note = sprintf( __( 'Shmart Reference ID: %s <br> Merchant Reference ID: %s', 'edd' ) , $_POST['shmart_refID'], $_POST['merchant_refID'] );
+					$payment_note .= '<br> Message: '.$_POST['status_msg'];
+					
+					edd_insert_payment_note( $payment_id,  $payment_note );
+					edd_set_payment_transaction_id( $payment_id, $post_data['shmart_refID'] );
+				}	
+			}
 		}
 	}
 	
