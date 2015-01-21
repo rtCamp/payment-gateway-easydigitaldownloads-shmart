@@ -311,12 +311,12 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 				// Checksum Method.
 				$checksum_method = 'MD5';
 				
-				/* Convert amount USD to INR. */
-				//$amount = $this->do_currency_conversion( $purchase_data['price'] );
-				$amount = intval( $purchase_data['price'] ) * 65;
+				/* Convert amount USD to INR. And Round up amount. */
+				$amount = ceil( $this->do_currency_conversion( $purchase_data['price'] ) );
+				//$amount = intval( $purchase_data['price'] ) * 65;
 				
 				// Convert amount into paisa.
-				$amount = ( intval( $amount ) * 100 );
+				$amount = ( $amount * 100 );
 
 				// String to generate checksum.
 				$checksum_string = $edd_options['shmart_secret_key'].$merchant_id. '|'. $edd_options['shmart_apikey']. '|'. $_SERVER['SERVER_ADDR']. '|'. $merchant_refID . '|'. 'INR' .'|'. $amount. '|'. $checksum_method. '|'. 1;
@@ -466,35 +466,34 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 		
 		public function do_currency_conversion( $amount, $currency = 'INR' ) {
 
-			$converted_amount = '';
+			$converted_amount = ''; $exchangeRates = '';
 			
-			// Requested file. Could also be e.g. 'currencies.json' or 'historical/2011-01-01.json'
-			$file = 'latest.json';
-			 $appId = 'YOUR_APP_ID';
+			// Get currency rates if exist.
+			if ( false === ( $exchangeRates = get_transient( '_rtp_currency_rates' ) ) ) {
+				// It wasn't there, so get latest currency rates.
+				// Requested file. Could also be e.g. 'currencies.json' or 'historical/2011-01-01.json'
+				$file = 'latest.json';
+				$appId = 'f547b86e7f9248a49d3ad0e3cc64cd6d';
+					
+				// Open CURL session:
+				$ch = curl_init("http://openexchangerates.org/api/{$file}?app_id={$appId}");
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+					
+				// Get the data:
+				$json = curl_exec($ch);
+				curl_close($ch);
+				
+				// Decode JSON response:
+				$exchangeRates = json_decode($json);
+				
+				set_transient( '_rtp_currency_rates', $exchangeRates->rates, 1 * HOUR_IN_SECONDS );
+				
+				$exchangeRates = $exchangeRates->rates;
+			}
 			
-			// Open CURL session:
-			$ch = curl_init("http://openexchangerates.org/api/{$file}?app_id={$appId}");
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-			
-			// Get the data:
-			$json = curl_exec($ch);
-			curl_close($ch);
-			
-			// Decode JSON response:
-			$exchangeRates = json_decode($json);
-			
-			$converted_amount = ( intval( $amount ) * intval( $exchangeRates->rates->$currency ) );
+			$converted_amount = ( $amount * $exchangeRates->$currency );
 			
 			return $converted_amount;
-			
-			// You can now access the rates inside the parsed object, like so:
-			/*printf(
-					"1 %s in GBP: %s (as of %s)",
-					$exchangeRates->base,
-					$exchangeRates->rates->GBP,
-					date('H:i jS F, Y', $exchangeRates->timestamp)
-			);*/
-			// -> eg. "1 USD in GBP: 0.643749 (as of 11:01, 3rd January 2012)"
 		}
 	}
 	
