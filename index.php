@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Shmart Payment Gateway for EDD
+ * Plugin Name: Easy Digital Downloads - Shmart Payment Gateway
  * Plugin URI: 
- * Description: This plugin give you payment gateway for easy digital downloads.
+ * Description: Add a payment gateway for Shmart Gateway.
  * Version: 1.0
  * Author: rtCamp
  * Author URI: https://rtcamp.com/
@@ -311,20 +311,23 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 				// Checksum Method.
 				$checksum_method = 'MD5';
 				
+				/* Convert amount USD to INR. */
+				//$amount = $this->do_currency_conversion( $purchase_data['price'] );
+				$amount = intval( $purchase_data['price'] ) * 65;
+				
 				// Convert amount into paisa.
-				$amount = ( intval( $purchase_data['price'] ) * 100 );
+				$amount = ( intval( $amount ) * 100 );
 
 				// String to generate checksum.
-				$checksum_string = $edd_options['shmart_secret_key'].$merchant_id. '|'. $edd_options['shmart_apikey']. '|'. $_SERVER['SERVER_ADDR']. '|'. $merchant_refID . '|'. edd_get_currency() .'|'. $amount. '|'. $checksum_method. '|'. 1;
+				$checksum_string = $edd_options['shmart_secret_key'].$merchant_id. '|'. $edd_options['shmart_apikey']. '|'. $_SERVER['SERVER_ADDR']. '|'. $merchant_refID . '|'. 'INR' .'|'. $amount. '|'. $checksum_method. '|'. 1;
 				
 				// Generate checksum.
-				//$checksum = hash_hmac('sha256', $checksum_string, $edd_options['shmart_secret_key'] );
 				$checksum = md5( $checksum_string );
 				
 				// Setup Shamrt arguments
 				$shamrt_args = array(
 					'apikey'        		=> $edd_options['shmart_apikey'],
-					'currency_code' 		=> edd_get_currency(),
+					'currency_code' 		=> 'INR',
 					'amount'        		=> $amount,
 					'merchant_refID' 		=> $merchant_refID,
 					'merchant_id'  			=> $merchant_id,
@@ -452,6 +455,46 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 					edd_set_payment_transaction_id( $payment_id, $post_data['shmart_refID'] );
 				}	
 			}
+		}
+		
+		/**
+		 * Doing currency conversion. For example convert USD amount to INR.
+		 * @param int   $amount Amount in.
+		 * @param string $currency Defualt is INR
+		 * @return $converted_amount Converted amount.
+		 */
+		
+		public function do_currency_conversion( $amount, $currency = 'INR' ) {
+
+			$converted_amount = '';
+			
+			// Requested file. Could also be e.g. 'currencies.json' or 'historical/2011-01-01.json'
+			$file = 'latest.json';
+			 $appId = 'YOUR_APP_ID';
+			
+			// Open CURL session:
+			$ch = curl_init("http://openexchangerates.org/api/{$file}?app_id={$appId}");
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			
+			// Get the data:
+			$json = curl_exec($ch);
+			curl_close($ch);
+			
+			// Decode JSON response:
+			$exchangeRates = json_decode($json);
+			
+			$converted_amount = ( intval( $amount ) * intval( $exchangeRates->rates->$currency ) );
+			
+			return $converted_amount;
+			
+			// You can now access the rates inside the parsed object, like so:
+			/*printf(
+					"1 %s in GBP: %s (as of %s)",
+					$exchangeRates->base,
+					$exchangeRates->rates->GBP,
+					date('H:i jS F, Y', $exchangeRates->timestamp)
+			);*/
+			// -> eg. "1 USD in GBP: 0.643749 (as of 11:01, 3rd January 2012)"
 		}
 	}
 	
