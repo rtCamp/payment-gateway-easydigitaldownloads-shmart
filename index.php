@@ -79,10 +79,12 @@ if( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 			// Add `Contact Number` field into shmart payment gateway form.
 			add_action( 'edd_cc_billing_bottom',  array( &$this, 'shmart_payment_form_fields' ) );
 			
-			// Add validation in shmart payment gateway form.
-			add_filter( 'edd_purchase_form_required_fields', array( &$this, 'shmart_payment_form_fields_validation' ) );
-			// Set validation for billing address by return `true` or `false`;
-			add_filter( 'edd_require_billing_address', function() { return true; } );
+			if( 'shmart' == edd_get_chosen_gateway() ) {
+				// Add validation in shmart payment gateway form.
+				add_filter( 'edd_purchase_form_required_fields', array( &$this, 'shmart_payment_form_fields_validation' ) );
+				// Set validation for billing address by return `true` or `false`;
+				add_filter( 'edd_require_billing_address', function() { return true; } );
+			}
 			
 			// Process Shmart Purchase.
 			add_action( 'edd_gateway_shmart', array( &$this, 'process_shmart_purchase' ) );
