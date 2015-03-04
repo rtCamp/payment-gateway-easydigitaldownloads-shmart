@@ -92,9 +92,7 @@ if (!class_exists("Shmart_Payment_Gateway")) {
                 // Add validation in shmart payment gateway form.
                 add_filter('edd_purchase_form_required_fields', array(&$this, 'shmart_payment_form_fields_validation'));
                 // Set validation for billing address by return `true` or `false`;
-                add_filter('edd_require_billing_address', function() {
-                    return true;
-                });
+                add_filter('edd_require_billing_address', array(&$this, 'is_billing_address_require'));
             }
 
             // Process Shmart Purchase.
@@ -194,6 +192,13 @@ if (!class_exists("Shmart_Payment_Gateway")) {
             } ?>" placeholder="<?php _e('Contact Number', 'edd'); ?>" value="<?php echo $contact_number; ?>"/>
             </p>
             <?php
+        }
+        
+        /**
+         * Billing address is required for shmart payment gateway.
+         */
+        public function is_billing_address_require() {
+            return true;
         }
 
         /**
