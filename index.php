@@ -73,6 +73,11 @@ if (!class_exists("Shmart_Payment_Gateway")) {
          * @var float Tax amount for country India.
          */
         public static $tax_amount = 12.36;
+        
+        /**
+         * @var float Vat amount for country India.
+         */
+        public static $vat_amount = 5;
 
         public function __construct() {
 
@@ -340,7 +345,8 @@ if (!class_exists("Shmart_Payment_Gateway")) {
                 // Add 12.36% in amount (after currency conversion) if customer from INDIA.
                 if( 'IN' == $purchase_data['user_info']['address']['country'] ) {
                     $tax_amount = ( ( $amount * Shmart_Payment_Gateway::$tax_amount ) / 100 );
-                    $amount = $amount + $tax_amount;
+                    $vat_amount = ( ( $amount * Shmart_Payment_Gateway::$vat_amount ) / 100 );
+                    $amount = $amount + $tax_amount + $vat_amount;
                 }
 
                 // Round up final amount and convert amount into paisa.
