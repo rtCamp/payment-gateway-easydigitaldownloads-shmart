@@ -69,16 +69,6 @@ if (!class_exists("Shmart_Payment_Gateway")) {
 
     class Shmart_Payment_Gateway {
 
-        /**
-         * @var float Tax amount for country India.
-         */
-        public static $tax_amount = 14;
-        
-        /**
-         * @var float Vat amount for country India.
-         */
-        public static $vat_amount = 5;
-
         public function __construct() {
 
             // Add filter to add payment gateway in edd.
@@ -123,7 +113,7 @@ if (!class_exists("Shmart_Payment_Gateway")) {
         public function add_shmart_payment($gateways) {
 
             $gateways['shmart'] = array(
-                'admin_label' => __('Shmart', 'edd'),
+                'admin_label' => __('Shmart (recommended for Indian users)', 'edd'),
                 'checkout_label' => __('Shmart', 'edd'),
             );
 
@@ -341,13 +331,6 @@ if (!class_exists("Shmart_Payment_Gateway")) {
 
                 /* Convert amount USD to INR. And Round up amount. */
                 $amount = $this->do_currency_conversion($purchase_data['price']);
-
-                // Add 14% in amount (after currency conversion) if customer from INDIA.
-                if( 'IN' == $purchase_data['user_info']['address']['country'] ) {
-                    $tax_amount = ( ( $amount * Shmart_Payment_Gateway::$tax_amount ) / 100 );
-                    $vat_amount = ( ( $amount * Shmart_Payment_Gateway::$vat_amount ) / 100 );
-                    $amount = $amount + $tax_amount + $vat_amount;
-                }
 
                 // Round up final amount and convert amount into paisa.
                 $amount = ( ceil($amount) * 100 );
