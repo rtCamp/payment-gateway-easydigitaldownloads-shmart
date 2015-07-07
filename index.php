@@ -558,5 +558,5 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
      * Instantiate Main Class
      */
     global $rtspg;
-    $rtSpg = new Shmart_Payment_Gateway();
+    $rtspg = new Shmart_Payment_Gateway();
 }
