@@ -98,15 +98,12 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
             // Add `Contact Number` field into shmart payment gateway form.
             add_action('edd_cc_billing_bottom', array(&$this, 'shmart_payment_form_fields'));
 
-            if ( function_exists( 'edd_get_chosen_gateway' ) ) {
-                if ('shmart' == edd_get_chosen_gateway()) {
-                    // Add validation in shmart payment gateway form.
-                    add_filter('edd_purchase_form_required_fields', array(&$this, 'shmart_payment_form_fields_validation'));
-                    // Set validation for billing address by return `true` or `false`;
-                    add_filter('edd_require_billing_address', array(&$this, 'is_billing_address_require'));
-                }
-            }
-
+            // Add validation in shmart payment gateway form.
+            add_filter('edd_purchase_form_required_fields', array(&$this, 'shmart_payment_form_fields_validation'));
+            
+            // Set validation for billing address by return `true` or `false`;
+            add_filter('edd_require_billing_address', array(&$this, 'is_billing_address_require'));
+               
             // Process Shmart Purchase.
             add_action('edd_gateway_shmart', array(&$this, 'process_shmart_purchase'));
 
@@ -213,29 +210,32 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          * Add `Contact Number` field into `Shmart` payment gateway form.
          */
         public function shmart_payment_form_fields() {
-
-            $contact_number = is_user_logged_in() ? get_user_meta(get_current_user_id(), '_edd_user_contact_info', true) : '';
-            ?>
-            <p id="edd-contact-wrap">
-                <label for="contact_number" class="edd-label">
-            <?php _e('Contact Number', 'edd-shmart'); ?>
-                    <?php if (edd_field_is_required('contact_number')) { ?>
-                        <span class="edd-required-indicator">*</span>
-                    <?php } ?>
-                </label>
-                <span class="edd-description"><?php _e('Your contact number.', 'edd-shmart'); ?></span>
-                <input id="contact_number" type="text" size="10" name="contact_number" class="contact-number edd-input<?php if (edd_field_is_required('contact_number')) {
-                echo ' required';
-            } ?>" placeholder="<?php _e('Contact Number', 'edd-shmart'); ?>" value="<?php echo $contact_number; ?>"/>
-            </p>
-            <?php
+            if ('shmart' == edd_get_chosen_gateway()) {
+                $contact_number = is_user_logged_in() ? get_user_meta(get_current_user_id(), '_edd_user_contact_info', true) : '';
+                ?>
+                <p id="edd-contact-wrap">
+                    <label for="contact_number" class="edd-label">
+                <?php _e('Contact Number', 'edd-shmart'); ?>
+                        <?php if (edd_field_is_required('contact_number')) { ?>
+                            <span class="edd-required-indicator">*</span>
+                        <?php } ?>
+                    </label>
+                    <span class="edd-description"><?php _e('Your contact number.', 'edd-shmart'); ?></span>
+                    <input id="contact_number" type="text" size="10" name="contact_number" class="contact-number edd-input<?php if (edd_field_is_required('contact_number')) {
+                    echo ' required';
+                } ?>" placeholder="<?php _e('Contact Number', 'edd-shmart'); ?>" value="<?php echo $contact_number; ?>"/>
+                </p>
+                <?php
+            }
         }
         
         /**
          * Billing address is required for shmart payment gateway.
          */
         public function is_billing_address_require() {
-            return true;
+            if ('shmart' == edd_get_chosen_gateway()) {
+                return true;
+            }
         }
 
         /**
@@ -244,16 +244,18 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          * @return $required_fields
          */
         public function shmart_payment_form_fields_validation($required_fields) {
+            
+            if ('shmart' == edd_get_chosen_gateway()) {
+                $required_fields['contact_number'] = array(
+                    'error_id' => 'invalid_contact_number',
+                    'error_message' => __('Please enter contact number', 'edd-shmart')
+                );
 
-            $required_fields['contact_number'] = array(
-                'error_id' => 'invalid_contact_number',
-                'error_message' => __('Please enter contact number', 'edd-shmart')
-            );
-
-            $required_fields['card_address'] = array(
-                'error_id' => 'invalid_address',
-                'error_message' => __('Please enter address', 'edd-shmart')
-            );
+                $required_fields['card_address'] = array(
+                    'error_id' => 'invalid_address',
+                    'error_message' => __('Please enter address', 'edd-shmart')
+                );
+            }
 
             return $required_fields;
         }
