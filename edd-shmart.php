@@ -2,12 +2,13 @@
 /**
  * Plugin Name: Easy Digital Downloads - Shmart Payment Gateway
  * Plugin URI:
- * Description: Add a payment gateway for Shmart Gateway.
+ * Description: Extends Easy Digital Downloads plugin, allowing you to take payments through popular Indian service Shmart.
  * Version: 1.0
  * Author: rtCamp
  * Author URI: https://rtcamp.com/
  * Text Domain: edd-shmart
  */
+
 /**
  * Main file, includes plugin classes and registers constants
  *
@@ -15,46 +16,47 @@
  *
  * @since Shmart_Payment_Gateway 1.0
  */
+
 /**
  * Don't load this file directly!
  */
-if (!defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
 /**
  * Absolute path to plugin
  */
-if (!defined('SPG_ABSPATH')) {
-    define('SPG_ABSPATH', __DIR__);
+if ( ! defined( 'SPG_ABSPATH' ) ) {
+    define( 'SPG_ABSPATH', __DIR__ );
 }
 
 /**
  * Path to plugins root folder
  */
-if (!defined('SPG_ROOT')) {
-    define('SPG_ROOT', plugin_dir_path(__FILE__));
+if ( ! defined( 'SPG_ROOT' ) ) {
+    define( 'SPG_ROOT', plugin_dir_path(__FILE__) );
 }
 
 /**
  * Base URL of plugin
  */
-if (!defined('SPG_BASEURL')) {
-    define('SPG_BASEURL', plugin_dir_url(__FILE__));
+if ( ! defined( 'SPG_BASEURL' ) ) {
+    define( 'SPG_BASEURL', plugin_dir_url(__FILE__) );
 }
 
 /**
  * Base Name of plugin
  */
-if (!defined('SPG_BASENAME')) {
-    define('SPG_BASENAME', plugin_basename(__FILE__));
+if ( ! defined( 'SPG_BASENAME' ) ) {
+    define( 'SPG_BASENAME', plugin_basename(__FILE__) );
 }
 
 /**
  * Directory Name of plugin
  */
-if (!defined('SPG_DIRNAME')) {
-    define('SPG_DIRNAME', dirname(plugin_basename(__FILE__)));
+if ( ! defined( 'SPG_DIRNAME' ) ) {
+    define( 'SPG_DIRNAME', dirname( plugin_basename(__FILE__) ) );
 }
 
 /**
@@ -75,7 +77,7 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
         public function __construct() {
 
             // we use this hook to render our warnings
-            add_action( 'admin_notices', array( $this, 'render_warnings') );
+            add_action( 'admin_notices', array( $this, 'render_warnings' ) );
 
             // check if EDD is active
             if ( ! class_exists( 'Easy_Digital_Downloads' ) ) {
@@ -87,34 +89,37 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
             }
 
             // Add filter to add payment gateway in edd.
-            add_filter('edd_payment_gateways', array(&$this, 'add_shmart_payment'));
+            add_filter( 'edd_payment_gateways', array( &$this, 'add_shmart_payment' ) );
 
             // Add filter to register shmart payment gateway settings in edd.
-            add_filter('edd_settings_gateways', array(&$this, 'register_shmart_payment_gateway_settings'));
+            add_filter( 'edd_settings_gateways', array( &$this, 'register_shmart_payment_gateway_settings' ) );
 
             // Add shmart payment form for user.
-            add_action('edd_shmart_cc_form', array(&$this, 'add_shmart_payment_form'));
+            add_action( 'edd_shmart_cc_form', array( &$this, 'add_shmart_payment_form' ) );
 
             // Add `Contact Number` field into shmart payment gateway form.
-            add_action('edd_purchase_form_user_info_fields', array(&$this, 'shmart_payment_form_fields'));
+            add_action( 'edd_purchase_form_user_info_fields', array( &$this, 'shmart_payment_form_fields' ) );
 
             // Add validation in shmart payment gateway form.
-            add_filter('edd_purchase_form_required_fields', array(&$this, 'shmart_payment_form_fields_validation'));
+            add_filter( 'edd_purchase_form_required_fields', array( &$this, 'shmart_payment_form_fields_validation' ) );
 
             // Set validation for billing address by return `true` or `false`;
-            add_filter('edd_require_billing_address', array(&$this, 'is_billing_address_require'));
+            add_filter( 'edd_require_billing_address', array( &$this, 'is_billing_address_require' ) );
 
             // Process Shmart Purchase.
-            add_action('edd_gateway_shmart', array(&$this, 'process_shmart_purchase'));
+            add_action( 'edd_gateway_shmart', array( &$this, 'process_shmart_purchase' ) );
 
             // Get Resposne from shmart.
-            add_action('init', array(&$this, 'get_response_from_shmart'));
+            add_action( 'init', array( &$this, 'get_response_from_shmart' ) );
 
             // Process shmart response.
-            add_action('verify_shmart_response', array(&$this, 'process_shmart_response'));
+            add_action( 'verify_shmart_response', array( &$this, 'process_shmart_response' ) );
 
             // Process if shmart payment is failed.
-            add_action('template_redirect', array(&$this, 'shmart_listen_for_failed_payments'), 20);
+            add_action( 'template_redirect', array( &$this, 'shmart_listen_for_failed_payments' ), 20 );
+            
+            //Display settings link on plugin page (beside the activate/deactivate links).
+            add_filter( 'plugin_action_links_' . SPG_BASENAME, array( &$this, 'shmart_action_links' ) );
         }
 
         /**
@@ -139,12 +144,12 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
             global $edd_options;
 
             $gateways['shmart'] = array(
-                'admin_label' => __('Shmart (recommended for Indian users)', 'edd-shmart'),
-                'checkout_label' => __('Shmart', 'edd-shmart'),
+                'admin_label'       => __( 'Shmart (recommended for Indian users)', 'edd-shmart' ),
+                'checkout_label'    => __( 'Shmart', 'edd-shmart' ),
             );
 
             if( isset( $edd_options['shmart_checkout_label'] ) && ! empty( $edd_options['shmart_checkout_label'] ) ) {
-                $gateways['shmart']['checkout_label'] = __($edd_options['shmart_checkout_label'], 'edd');
+                $gateways['shmart']['checkout_label'] = __( $edd_options['shmart_checkout_label'], 'edd' );
             }
 
             return $gateways;
@@ -155,44 +160,45 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          * @param array   $gateways_settings Settings of gateways
          * @return $gateways_settings
          */
-        public function register_shmart_payment_gateway_settings($gateways_settings) {
+        public function register_shmart_payment_gateway_settings( $gateways_settings ) {
 
             $gateways_settings['shmart'] = array(
-                'id' => 'shmart',
-                'name' => '<strong>' . __('Shmart Settings', 'edd-shmart') . '</strong>',
-                'desc' => __('Configure the Shmart settings', 'edd-shmart'),
-                'type' => 'header'
+                'id'    => 'shmart',
+                'name'  => '<strong>' . __( 'Shmart Settings', 'edd-shmart' ) . '</strong>',
+                'desc'  => __( 'Configure the Shmart settings', 'edd-shmart' ),
+                'type'  => 'header'
             );
 
             $gateways_settings['shmart_merchant_id'] = array(
-                'id' => 'shmart_merchant_id',
-                'name' => __('Shmart Merchant ID', 'edd-shmart'),
-                'desc' => __('Enter your Merchant ID', 'edd-shmart'),
-                'type' => 'text',
-                'size' => 'regular'
+                'id'    => 'shmart_merchant_id',
+                'name'  => __( 'Shmart Merchant ID', 'edd-shmart' ),
+                'desc'  => __( 'Enter your Merchant ID', 'edd-shmart' ),
+                'type'  => 'text',
+                'size'  => 'regular'
             );
 
             $gateways_settings['shmart_api_key'] = array(
-                'id' => 'shmart_apikey',
-                'name' => __('Shmart API Key', 'edd-shmart'),
-                'desc' => __('Enter your Shmart API Key', 'edd-shmart'),
-                'type' => 'text',
-                'size' => 'regular'
+                'id'    => 'shmart_apikey',
+                'name'  => __( 'Shmart API Key', 'edd-shmart' ),
+                'desc'  => __( 'Enter your Shmart API Key', 'edd-shmart' ),
+                'type'  => 'text',
+                'size'  => 'regular'
             );
 
             $gateways_settings['shmart_secret_key'] = array(
-                'id' => 'shmart_secret_key',
-                'name' => __('Shmart Secret Key', 'edd-shmart'),
-                'desc' => __('Enter your Shmart Secret Key', 'edd-shmart'),
-                'type' => 'text',
-                'size' => 'regular'
+                'id'    => 'shmart_secret_key',
+                'name'  => __( 'Shmart Secret Key', 'edd-shmart' ),
+                'desc'  => __( 'Enter your Shmart Secret Key', 'edd-shmart' ),
+                'type'  => 'text',
+                'size'  => 'regular'
             );
 
             $gateways_settings['shmart_checkout_label'] = array(
-                'id' => 'shmart_checkout_label',
-                'name' => __('Checkout Label', 'edd-shmart'),
-                'type' => 'text',
-                'size' => 'regular'
+                'id'    => 'shmart_checkout_label',
+                'name'  => __( 'Checkout Label', 'edd-shmart' ),
+                'desc'  => __( 'Display payment gateway text on checkout page', 'edd-shmart' ),
+                'type'  => 'text',
+                'size'  => 'regular',
             );
 
             return $gateways_settings;
@@ -203,27 +209,27 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          */
         public function add_shmart_payment_form() {
 
-            do_action('edd_after_cc_fields');
+            do_action( 'edd_after_cc_fields' );
         }
 
         /**
          * Add `Contact Number` field into `Shmart` payment gateway form.
          */
         public function shmart_payment_form_fields() {
-            if ('shmart' == edd_get_chosen_gateway()) {
-                $contact_number = is_user_logged_in() ? get_user_meta(get_current_user_id(), '_edd_user_contact_info', true) : '';
+            if ( 'shmart' == edd_get_chosen_gateway() ) {
+                $contact_number = is_user_logged_in() ? get_user_meta( get_current_user_id(), '_edd_user_contact_info', true ) : '';
                 ?>
                 <p id="edd-contact-wrap">
                     <label for="contact_number" class="edd-label">
-                <?php _e('Contact Number', 'edd-shmart'); ?>
-                        <?php if (edd_field_is_required('contact_number')) { ?>
+                <?php _e( 'Contact Number', 'edd-shmart' ); ?>
+                        <?php if ( edd_field_is_required( 'contact_number' ) ) { ?>
                             <span class="edd-required-indicator">*</span>
                         <?php } ?>
                     </label>
-                    <span class="edd-description"><?php _e('Your contact number.', 'edd-shmart'); ?></span>
-                    <input id="contact_number" type="text" size="10" name="contact_number" class="contact-number edd-input<?php if (edd_field_is_required('contact_number')) {
+                    <span class="edd-description"><?php _e( 'Your contact number.', 'edd-shmart' ); ?></span>
+                    <input id="contact_number" type="text" size="10" name="contact_number" class="contact-number edd-input<?php if ( edd_field_is_required('contact_number') ) {
                     echo ' required';
-                } ?>" placeholder="<?php _e('Contact Number', 'edd-shmart'); ?>" value="<?php echo $contact_number; ?>"/>
+                } ?>" placeholder="<?php _e( 'Contact Number', 'edd-shmart' ); ?>" value="<?php echo $contact_number; ?>"/>
                 </p>
                 <?php
             }
@@ -234,7 +240,7 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          * @param  bool $is_billing Whether billing details is dispalyed or not.
          */
         public function is_billing_address_require( $is_billing ) {
-            if ('shmart' == edd_get_chosen_gateway() && $is_billing ) {
+            if ( 'shmart' == edd_get_chosen_gateway() && edd_get_cart_total() ) {
                 return true;
             } else {
                 return false;
@@ -246,17 +252,17 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          * @param array   $required_fields All Require fields
          * @return $required_fields
          */
-        public function shmart_payment_form_fields_validation($required_fields) {
+        public function shmart_payment_form_fields_validation( $required_fields ) {
 
-            if ('shmart' == edd_get_chosen_gateway()) {
+            if ( 'shmart' == edd_get_chosen_gateway() ) {
                 $required_fields['contact_number'] = array(
                     'error_id' => 'invalid_contact_number',
-                    'error_message' => __('Please enter contact number', 'edd-shmart')
+                    'error_message' => __( 'Please enter contact number', 'edd-shmart' )
                 );
                 if( edd_get_cart_total() ) {
                     $required_fields['card_address'] = array(
                         'error_id' => 'invalid_address',
-                        'error_message' => __('Please enter address', 'edd-shmart')
+                        'error_message' => __( 'Please enter billing address', 'edd-shmart' )
                     );
                 }
             }
@@ -270,17 +276,17 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          * @param boolean   $ssl_check Need url with ssl or without ssl
          * @return $shmart_uri
          */
-        public function get_shmart_redirect($ssl_check = false) {
+        public function get_shmart_redirect( $ssl_check = false ) {
             global $edd_options;
 
-            if (is_ssl() || !$ssl_check) {
+            if ( is_ssl() || ! $ssl_check ) {
                 $protocal = 'https://';
             } else {
                 $protocal = 'http://';
             }
 
             // Check the current payment mode
-            if (edd_is_test_mode()) {
+            if ( edd_is_test_mode() ) {
                 // Test mode
                 $shmart_uri = $protocal . 'pay.shmart.in/checkout/v1/transactions';
             } else {
@@ -288,7 +294,7 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
                 $shmart_uri = $protocal . 'pay.shmart.in/checkout/v1/transactions';
             }
 
-            return apply_filters('edd_shmart_uri', $shmart_uri);
+            return apply_filters( 'edd_shmart_uri', $shmart_uri );
         }
 
         /**
@@ -296,16 +302,16 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          * @param int   $length Length of Merchant reference ID.
          * @return $merchant_refID
          */
-        public function generate_merchant_ref_ID($length = 20) {
+        public function generate_merchant_ref_ID( $length = 20 ) {
 
             $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-            $charactersLength = strlen($characters);
+            $charactersLength = strlen( $characters );
 
             $merchant_refID = '';
 
             for ($i = 0; $i < $length; $i++) {
-                $merchant_refID .= $characters[rand(0, $charactersLength - 1)];
+                $merchant_refID .= $characters[ rand( 0, $charactersLength - 1 ) ];
             }
 
             return $merchant_refID;
@@ -317,54 +323,57 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          * @param array   $purchase_data Purchase Data
          * @return void
          */
-        function process_shmart_purchase($purchase_data) {
+        function process_shmart_purchase( $purchase_data ) {
             global $edd_options;
 
-            if (!wp_verify_nonce($purchase_data['gateway_nonce'], 'edd-gateway')) {
-                wp_die(__('Nonce verification has failed', 'edd-shmart'), __('Error', 'edd-shmart'), array('response' => 403));
+            if ( ! wp_verify_nonce( $purchase_data['gateway_nonce'], 'edd-gateway' ) ) {
+                wp_die(__( 'Nonce verification has failed', 'edd-shmart' ), __( 'Error', 'edd-shmart' ), array( 'response' => 403 ) );
             }
 
             // Collect payment data
             $payment_data = array(
-                'price' => $purchase_data['price'],
-                'date' => $purchase_data['date'],
-                'user_email' => $purchase_data['user_email'],
-                'purchase_key' => $purchase_data['purchase_key'],
-                'currency' => edd_get_currency(),
-                'downloads' => $purchase_data['downloads'],
-                'user_info' => $purchase_data['user_info'],
-                'cart_details' => $purchase_data['cart_details'],
-                'gateway' => 'shmart',
-                'status' => 'pending'
+                'price'         => $purchase_data['price'],
+                'date'          => $purchase_data['date'],
+                'user_email'    => $purchase_data['user_email'],
+                'purchase_key'  => $purchase_data['purchase_key'],
+                'currency'      => edd_get_currency(),
+                'downloads'     => $purchase_data['downloads'],
+                'user_info'     => $purchase_data['user_info'],
+                'cart_details'  => $purchase_data['cart_details'],
+                'gateway'       => 'shmart',
+                'status'        => 'pending'
             );
 
             // Add contact number if user is logged in.
-            if (is_user_logged_in()) {
+            if ( is_user_logged_in() ) {
                 $user_ID = get_current_user_id();
                 // Add contact number in user meta.
-                update_user_meta($user_ID, '_edd_user_contact_info', $purchase_data['post_data']['contact_number']);
+                update_user_meta( $user_ID, '_edd_user_contact_info', $purchase_data['post_data']['contact_number'] );
             }
 
             // Record the pending payment
-            $payment = edd_insert_payment($payment_data);
+            $payment = edd_insert_payment( $payment_data );
 
             // Check payment
-            if (!$payment) {
+            if ( ! $payment ) {
                 // Record the error
-                edd_record_gateway_error(__('Payment Error', 'edd-shmart'), sprintf(__('Payment creation failed before sending buyer to Shmart. Payment data: %s', 'edd-shmart'), json_encode($payment_data)), $payment);
+                edd_record_gateway_error( __( 'Payment Error', 'edd-shmart' ), sprintf( __( 'Payment creation failed before sending buyer to Shmart. Payment data: %s', 'edd-shmart' ), json_encode( $payment_data ) ), $payment );
                 // Problems? send back
-                edd_send_back_to_checkout('?payment-mode=' . $purchase_data['post_data']['edd-gateway']);
+                edd_send_back_to_checkout( '?payment-mode=' . $purchase_data['post_data']['edd-gateway'] );
             } else {
                 // Only send to Shmart if the pending payment is created successfully
                 //$listener_url = add_query_arg( 'edd-listener', 'SHMART_RESPONSE', home_url( 'index.php' ) );
                 // Get the success url
-                $listener_url = add_query_arg(array(
-                    'edd-listener' => 'SHMART_RESPONSE',
-                    'payment-id' => $payment
-                        ), home_url('index.php'));
+                $listener_url = add_query_arg(
+                    array(
+                        'edd-listener'  => 'SHMART_RESPONSE',
+                        'payment-id'    => $payment
+                    ),
+                    home_url( 'index.php' )
+                );
 
                 // Get the Shmart redirect uri
-                $shmart_redirect = trailingslashit($this->get_shmart_redirect());
+                $shmart_redirect = trailingslashit( $this->get_shmart_redirect() );
 
                 // Merchant ID.
                 $merchant_id = $edd_options['shmart_merchant_id'];
@@ -376,7 +385,7 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
                 $checksum_method = 'MD5';
 
                 /* Convert amount USD to INR. And Round up amount. */
-                $amount = $this->do_currency_conversion($purchase_data['price']);
+                $amount = $this->do_currency_conversion( $purchase_data['price'] );
 
                 // Round up final amount and convert amount into paisa.
                 $amount = ( ceil($amount) * 100 );
@@ -385,38 +394,38 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
                 $checksum_string = $edd_options['shmart_secret_key'] . $merchant_id . '|' . $edd_options['shmart_apikey'] . '|' . $_SERVER['SERVER_ADDR'] . '|' . $merchant_refID . '|' . 'INR' . '|' . $amount . '|' . $checksum_method . '|' . 1;
 
                 // Generate checksum.
-                $checksum = md5($checksum_string);
+                $checksum = md5( $checksum_string );
 
                 // Setup Shamrt arguments
                 $shamrt_args = array(
-                    'apikey' => $edd_options['shmart_apikey'],
-                    'currency_code' => 'INR',
-                    'amount' => $amount,
-                    'merchant_refID' => $merchant_refID,
-                    'merchant_id' => $merchant_id,
-                    'checksum_method' => $checksum_method,
-                    'checksum' => $checksum,
-                    'ip_address' => $_SERVER['SERVER_ADDR'],
-                    'email' => $purchase_data['user_email'],
-                    'mobileNo' => $purchase_data['post_data']['contact_number'],
-                    'f_name' => $purchase_data['user_info']['first_name'],
-                    'addr' => $purchase_data['user_info']['address']['line1'] . ', ' . $purchase_data['user_info']['address']['line2'],
-                    'city' => $purchase_data['user_info']['address']['city'],
-                    'state' => $purchase_data['user_info']['address']['state'],
-                    'zipcode' => $purchase_data['user_info']['address']['zip'],
-                    'country' => $purchase_data['user_info']['address']['country'],
-                    'show_shipping_addr' => 0,
-                    'rurl' => get_permalink($edd_options['success_page']),
-                    'furl' => edd_get_failed_transaction_uri('?payment-id=' . $payment),
-                    'surl' => $listener_url,
-                    'authorize_user' => 1,
+                    'apikey'                => $edd_options['shmart_apikey'],
+                    'currency_code'         => 'INR',
+                    'amount'                => $amount,
+                    'merchant_refID'        => $merchant_refID,
+                    'merchant_id'           => $merchant_id,
+                    'checksum_method'       => $checksum_method,
+                    'checksum'              => $checksum,
+                    'ip_address'            => $_SERVER['SERVER_ADDR'],
+                    'email'                 => $purchase_data['user_email'],
+                    'mobileNo'              => $purchase_data['post_data']['contact_number'],
+                    'f_name'                => $purchase_data['user_info']['first_name'],
+                    'addr'                  => $purchase_data['user_info']['address']['line1'] . ', ' . $purchase_data['user_info']['address']['line2'],
+                    'city'                  => $purchase_data['user_info']['address']['city'],
+                    'state'                 => $purchase_data['user_info']['address']['state'],
+                    'zipcode'               => $purchase_data['user_info']['address']['zip'],
+                    'country'               => $purchase_data['user_info']['address']['country'],
+                    'show_shipping_addr'    => 0,
+                    'rurl'                  => get_permalink( $edd_options['success_page'] ),
+                    'furl'                  => edd_get_failed_transaction_uri( '?payment-id=' . $payment ),
+                    'surl'                  => $listener_url,
+                    'authorize_user'        => 1,
                 );
 
-                $shamrt_args = apply_filters('edd_shmart_redirect_args', $shamrt_args, $purchase_data);
+                $shamrt_args = apply_filters( 'edd_shmart_redirect_args', $shamrt_args, $purchase_data );
 
                 echo '<form action="' . $shmart_redirect . '" method="POST" name="shmartForm">';
 
-                foreach ($shamrt_args as $arg => $arg_value) {
+                foreach ( $shamrt_args as $arg => $arg_value ) {
                     echo '<input type="hidden" name="' . $arg . '" value="' . $arg_value . '">';
                 }
 
@@ -437,9 +446,8 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
             global $edd_options;
 
             // Regular Shmart Response
-            if (isset($_GET['edd-listener']) && $_GET['edd-listener'] == 'SHMART_RESPONSE') {
-
-                do_action('verify_shmart_response');
+            if ( isset( $_GET['edd-listener'] ) && 'SHMART_RESPONSE' == $_GET['edd-listener'] ) {
+                do_action( 'verify_shmart_response' );
             }
         }
 
@@ -458,39 +466,42 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
             $payment_id = $_GET['payment-id'];
 
             // Get Payment status code.
-            $payment_status_code = intval($post_data['status']);
+            $payment_status_code = intval( $post_data['status'] );
 
-            if (empty($payment_id)) {
+            if ( empty( $payment_id ) ) {
                 return;
             }
 
-            if (edd_get_payment_gateway($payment_id) != 'shmart') {
+            if ( 'shmart' != edd_get_payment_gateway( $payment_id ) ) {
                 return; // this isn't a shmart response.
             }
 
             // create payment note.
-            $payment_note = sprintf(__('Shmart Reference ID: %s <br> Merchant Reference ID: %s', 'edd-shmart'), $post_data['shmart_refID'], $post_data['merchant_refID']);
+            $payment_note = sprintf( __( 'Shmart Reference ID: %s <br> Merchant Reference ID: %s', 'edd-shmart' ), $post_data['shmart_refID'], $post_data['merchant_refID'] );
             $payment_note .= '<br> Message: ' . $post_data['status_msg'];
 
-            if ($payment_status_code == 0) {
+            if ( 0 == $payment_status_code ) {
 
-                edd_insert_payment_note($payment_id, $payment_note);
-                edd_set_payment_transaction_id($payment_id, $post_data['shmart_refID']);
-                edd_update_payment_status($payment_id, 'publish');
+                edd_insert_payment_note( $payment_id, $payment_note );
+                edd_set_payment_transaction_id( $payment_id, $post_data['shmart_refID'] );
+                edd_update_payment_status( $payment_id, 'publish' );
 
-                $confirm_url = add_query_arg(array(
-                    'payment-confirmation' => 'shmart',
-                    'payment-id' => $payment_id
-                        ), get_permalink($edd_options['success_page']));
+                $confirm_url = add_query_arg(
+                    array(
+                        'payment-confirmation' => 'shmart',
+                        'payment-id'            => $payment_id
+                    ),
+                    get_permalink( $edd_options['success_page'] )
+                );
 
-                wp_redirect($confirm_url);
+                wp_redirect( $confirm_url );
             } else {
 
-                edd_insert_payment_note($payment_id, $payment_note);
-                edd_set_payment_transaction_id($payment_id, $post_data['shmart_refID']);
-                edd_update_payment_status($payment_id, 'failed');
+                edd_insert_payment_note( $payment_id, $payment_note );
+                edd_set_payment_transaction_id( $payment_id, $post_data['shmart_refID'] );
+                edd_update_payment_status( $payment_id, 'failed' );
 
-                wp_redirect(edd_get_failed_transaction_uri('?payment-id=' . $payment_id));
+                wp_redirect( edd_get_failed_transaction_uri( '?payment-id=' . $payment_id ) );
             }
 
             die();
@@ -502,19 +513,19 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          */
         public function shmart_listen_for_failed_payments() {
 
-            $failed_page = edd_get_option('failure_page', 0);
+            $failed_page = edd_get_option( 'failure_page', 0 );
 
-            if (!empty($failed_page) && is_page($failed_page) && !empty($_GET['payment-id'])) {
+            if ( ! empty( $failed_page ) && is_page( $failed_page ) && ! empty( $_GET['payment-id'] ) ) {
 
-                $payment_id = absint($_GET['payment-id']);
+                $payment_id = absint( $_GET['payment-id'] );
 
-                if (!empty($_POST)) {
+                if ( ! empty( $_POST ) ) {
                     // create payment note for failed transaction.
-                    $payment_note = sprintf(__('Shmart Reference ID: %s <br> Merchant Reference ID: %s', 'edd-shmart'), $_POST['shmart_refID'], $_POST['merchant_refID']);
+                    $payment_note = sprintf( __( 'Shmart Reference ID: %s <br> Merchant Reference ID: %s', 'edd-shmart' ), $_POST['shmart_refID'], $_POST['merchant_refID'] );
                     $payment_note .= '<br> Message: ' . $_POST['status_msg'];
 
-                    edd_insert_payment_note($payment_id, $payment_note);
-                    edd_set_payment_transaction_id($payment_id, $post_data['shmart_refID']);
+                    edd_insert_payment_note( $payment_id, $payment_note );
+                    edd_set_payment_transaction_id( $payment_id, $post_data['shmart_refID'] );
                 }
             }
         }
@@ -525,30 +536,30 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          * @param string $currency Defualt is INR
          * @return $converted_amount Converted amount.
          */
-        public function do_currency_conversion($amount, $currency = 'INR') {
+        public function do_currency_conversion( $amount, $currency = 'INR' ) {
 
             $converted_amount = '';
             $exchangeRates = '';
 
             // Get currency rates if exist.
-            if (false === ( $exchangeRates = get_transient('_rtp_currency_rates') )) {
+            if ( false === ( $exchangeRates = get_transient( '_rtp_currency_rates' ) ) ) {
                 // It wasn't there, so get latest currency rates.
                 // Requested file. Could also be e.g. 'currencies.json' or 'historical/2011-01-01.json'
                 $file = 'latest.json';
                 $appId = 'f547b86e7f9248a49d3ad0e3cc64cd6d';
 
                 // Open CURL session:
-                $ch = curl_init("http://openexchangerates.org/api/{$file}?app_id={$appId}");
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                $ch = curl_init( "http://openexchangerates.org/api/{$file}?app_id={$appId}" );
+                curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
 
                 // Get the data:
-                $json = curl_exec($ch);
-                curl_close($ch);
+                $json = curl_exec( $ch );
+                curl_close( $ch );
 
                 // Decode JSON response:
-                $exchangeRates = json_decode($json);
+                $exchangeRates = json_decode( $json );
 
-                set_transient('_rtp_currency_rates', $exchangeRates->rates, 1 * HOUR_IN_SECONDS);
+                set_transient( '_rtp_currency_rates', $exchangeRates->rates, 1 * HOUR_IN_SECONDS );
 
                 $exchangeRates = $exchangeRates->rates;
             }
@@ -557,7 +568,20 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 
             return $converted_amount;
         }
-
+        
+        /**
+         * Display `Settings` link on plugin page (beside the activate/deactivate links).
+         * @param array $action_links
+         * @return array $action_links
+         * 
+         */
+        public function shmart_action_links( $action_links ) {
+            $settings = array(
+                'settings' => '<a href="' . admin_url( 'edit.php?post_type=download&page=edd-settings&tab=gateways' ) . '">' . __( 'Settings', 'edd-shmart' ) . '</a>'
+            );
+            $action_links = array_merge( $settings, $action_links );
+            return $action_links;
+        }
     }
 
     /**
