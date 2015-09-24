@@ -20,42 +20,42 @@
 /**
  * Don't load this file directly!
  */
-if ( ! defined( 'ABSPATH' ) ) {
+if ( !defined( 'ABSPATH' ) ) {
     exit;
 }
 
 /**
  * Absolute path to plugin
  */
-if ( ! defined( 'SPG_ABSPATH' ) ) {
+if ( !defined( 'SPG_ABSPATH' ) ) {
     define( 'SPG_ABSPATH', __DIR__ );
 }
 
 /**
  * Path to plugins root folder
  */
-if ( ! defined( 'SPG_ROOT' ) ) {
+if ( !defined( 'SPG_ROOT' ) ) {
     define( 'SPG_ROOT', plugin_dir_path(__FILE__) );
 }
 
 /**
  * Base URL of plugin
  */
-if ( ! defined( 'SPG_BASEURL' ) ) {
+if ( !defined( 'SPG_BASEURL' ) ) {
     define( 'SPG_BASEURL', plugin_dir_url(__FILE__) );
 }
 
 /**
  * Base Name of plugin
  */
-if ( ! defined( 'SPG_BASENAME' ) ) {
+if ( !defined( 'SPG_BASENAME' ) ) {
     define( 'SPG_BASENAME', plugin_basename(__FILE__) );
 }
 
 /**
  * Directory Name of plugin
  */
-if ( ! defined( 'SPG_DIRNAME' ) ) {
+if ( !defined( 'SPG_DIRNAME' ) ) {
     define( 'SPG_DIRNAME', dirname( plugin_basename(__FILE__) ) );
 }
 
@@ -67,7 +67,7 @@ if ( ! defined( 'SPG_DIRNAME' ) ) {
  * @package Shmart_Payment_Gateway
  * @since Shmart_Payment_Gateway 1.0
  */
-if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
+if ( !class_exists( "Shmart_Payment_Gateway" ) ) {
 
     class Shmart_Payment_Gateway {
 
@@ -75,17 +75,23 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
         protected $warning;
 
         public function __construct() {
-
+            global $edd_options;
+            
             // we use this hook to render our warnings
             add_action( 'admin_notices', array( $this, 'render_warnings' ) );
 
             // check if EDD is active
-            if ( ! class_exists( 'Easy_Digital_Downloads' ) ) {
+            if ( !class_exists( 'Easy_Digital_Downloads' ) ) {
                 $this->warning = sprintf(
                     __( 'The plugin Easy Digital Downloads - Shmart Payment Gateway is enabled but not effective. It requires %s in order to work.', 'edd-shmart' ),
                     sprintf( '<a target="_blank" href="%s">%s</a>', 'https://wordpress.org/plugins/easy-digital-downloads/', 'Easy Digital Downloads' )
                 );
                 return;
+            }
+            
+            //Display notice if app id is blank.
+            if( isset( $edd_options['gateways']['shmart'] ) && ( !isset( $edd_options['shmart_openexchangerates_appid'] ) || empty( $edd_options['shmart_openexchangerates_appid'] ) ) ) {
+                $this->warning = __( 'Please enter Open Exchange Rates app id under shmart settings.', 'edd-shmart' );
             }
 
             // Add filter to add payment gateway in edd.
@@ -120,13 +126,16 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
             
             //Display settings link on plugin page (beside the activate/deactivate links).
             add_filter( 'plugin_action_links_' . SPG_BASENAME, array( &$this, 'shmart_action_links' ) );
+            
+            //Clear currency conversion rates if settings updated.
+            add_action( 'update_option_edd_settings', array( &$this, 'clear_currency_rates' ), 10, 2 );
         }
 
         /**
          * Render plugin warning.
          */
         public function render_warnings() {
-            if( ! empty( $this->warning ) ) :
+            if( !empty( $this->warning ) ) :
         ?>
             <div class="message error">
                 <p><?php echo $this->warning; ?></p>
@@ -142,16 +151,26 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          */
         public function add_shmart_payment($gateways) {
             global $edd_options;
-
-            $gateways['shmart'] = array(
-                'admin_label'       => __( 'Shmart (recommended for Indian users)', 'edd-shmart' ),
-                'checkout_label'    => __( 'Shmart', 'edd-shmart' ),
-            );
-
-            if( isset( $edd_options['shmart_checkout_label'] ) && ! empty( $edd_options['shmart_checkout_label'] ) ) {
-                $gateways['shmart']['checkout_label'] = __( $edd_options['shmart_checkout_label'], 'edd' );
+            $front_end = true;
+            
+            // If currency is not INR and exchage rates availabel then display payment option in front-end.
+            if( !is_admin() && isset( $edd_options['currency'] ) && 'INR' != $edd_options['currency'] ) {
+                $exchangeRates = $this->get_currency_rate();
+                if( isset( $exchangeRates['error' ] ) ) {
+                    $front_end = false;
+                }
             }
+            
+            if( is_admin() || $front_end ) {
+                $gateways['shmart'] = array(
+                    'admin_label'       => __( 'Shmart (recommended for Indian users)', 'edd-shmart' ),
+                    'checkout_label'    => __( 'Shmart', 'edd-shmart' ),
+                );
 
+                if( isset( $edd_options['shmart_checkout_label'] ) && !empty( $edd_options['shmart_checkout_label'] ) ) {
+                    $gateways['shmart']['checkout_label'] = __( $edd_options['shmart_checkout_label'], 'edd' );
+                }
+            }
             return $gateways;
         }
 
@@ -161,7 +180,8 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
          * @return $gateways_settings
          */
         public function register_shmart_payment_gateway_settings( $gateways_settings ) {
-
+            global $edd_options;
+            
             $gateways_settings['shmart'] = array(
                 'id'    => 'shmart',
                 'name'  => '<strong>' . __( 'Shmart Settings', 'edd-shmart' ) . '</strong>',
@@ -200,6 +220,21 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
                 'type'  => 'text',
                 'size'  => 'regular',
             );
+            
+            if( isset( $edd_options['currency'] ) && 'INR' != $edd_options['currency'] ) {
+                $desc = "For USD, you can use free API to convert USD to INR. <a target='_blank' href='https://openexchangerates.org/signup/free'>Click Here</a> for free api." .
+                             "<br>Other than USD currency, you must need to use enterpise API. <a target='_blank' href='https://openexchangerates.org/signup'>Click Here</a> for enterprise or unlimited api." .
+                             "<br>In both condition, API key is must to enable shmart payment gateway.";
+                $desc = __( $desc, 'edd-shmart' );
+
+                $gateways_settings['shmart_openexchangerates_appid'] = array(
+                    'id'    => 'shmart_openexchangerates_appid',
+                    'name'  => __( 'Open Exchange Rates APP ID', 'edd-shmart' ),
+                    'desc'  => $desc,
+                    'type'  => 'text',
+                    'size'  => 'regular',
+                );
+            }
 
             return $gateways_settings;
         }
@@ -279,7 +314,7 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
         public function get_shmart_redirect( $ssl_check = false ) {
             global $edd_options;
 
-            if ( is_ssl() || ! $ssl_check ) {
+            if ( is_ssl() || !$ssl_check ) {
                 $protocal = 'https://';
             } else {
                 $protocal = 'http://';
@@ -326,7 +361,7 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
         function process_shmart_purchase( $purchase_data ) {
             global $edd_options;
 
-            if ( ! wp_verify_nonce( $purchase_data['gateway_nonce'], 'edd-gateway' ) ) {
+            if ( !wp_verify_nonce( $purchase_data['gateway_nonce'], 'edd-gateway' ) ) {
                 wp_die(__( 'Nonce verification has failed', 'edd-shmart' ), __( 'Error', 'edd-shmart' ), array( 'response' => 403 ) );
             }
 
@@ -355,7 +390,7 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
             $payment = edd_insert_payment( $payment_data );
 
             // Check payment
-            if ( ! $payment ) {
+            if ( !$payment ) {
                 // Record the error
                 edd_record_gateway_error( __( 'Payment Error', 'edd-shmart' ), sprintf( __( 'Payment creation failed before sending buyer to Shmart. Payment data: %s', 'edd-shmart' ), json_encode( $payment_data ) ), $payment );
                 // Problems? send back
@@ -384,11 +419,11 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
                 // Checksum Method.
                 $checksum_method = 'MD5';
 
-                /* Convert amount USD to INR. And Round up amount. */
+                /* Do currency conversion. */
                 $amount = $this->do_currency_conversion( $purchase_data['price'] );
-
+                
                 // Round up final amount and convert amount into paisa.
-                $amount = ( ceil($amount) * 100 );
+                $amount = ( ceil( $amount ) * 100 );
 
                 // String to generate checksum.
                 $checksum_string = $edd_options['shmart_secret_key'] . $merchant_id . '|' . $edd_options['shmart_apikey'] . '|' . $_SERVER['SERVER_ADDR'] . '|' . $merchant_refID . '|' . 'INR' . '|' . $amount . '|' . $checksum_method . '|' . 1;
@@ -515,11 +550,11 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 
             $failed_page = edd_get_option( 'failure_page', 0 );
 
-            if ( ! empty( $failed_page ) && is_page( $failed_page ) && ! empty( $_GET['payment-id'] ) ) {
+            if ( !empty( $failed_page ) && is_page( $failed_page ) && !empty( $_GET['payment-id'] ) ) {
 
                 $payment_id = absint( $_GET['payment-id'] );
 
-                if ( ! empty( $_POST ) ) {
+                if ( !empty( $_POST ) ) {
                     // create payment note for failed transaction.
                     $payment_note = sprintf( __( 'Shmart Reference ID: %s <br> Merchant Reference ID: %s', 'edd-shmart' ), $_POST['shmart_refID'], $_POST['merchant_refID'] );
                     $payment_note .= '<br> Message: ' . $_POST['status_msg'];
@@ -529,27 +564,39 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
                 }
             }
         }
-
+        
         /**
-         * Doing currency conversion. For example convert USD amount to INR.
-         * @param int   $amount Amount in.
-         * @param string $currency Defualt is INR
-         * @return $converted_amount Converted amount.
+         * Check Open Exchange Rates APP ID is valid or not.
+         * If valid then store and return currency rates.
+         * Currency rates store in transient for 1 hour.
+         * If not valid then return error message.
+         * @global $edd_options
+         * @return array
          */
-        public function do_currency_conversion( $amount, $currency = 'INR' ) {
-
-            $converted_amount = '';
-            $exchangeRates = '';
-
+        public function get_currency_rate() {
+            global $edd_options;
+            
+            $exchangeRates = $appId = ''; $return = array();
+            
+            // Check for app id.
+            if( isset( $edd_options['shmart_openexchangerates_appid'] ) && !empty( $edd_options['shmart_openexchangerates_appid'] ) ) {
+                $appId = $edd_options['shmart_openexchangerates_appid'];
+            } else {
+                return $return = array(
+                    "error"     => true,
+                    "message"   => __( 'Need app id for currency conversion', 'edd-shmart' ),
+                );
+            }
+            
             // Get currency rates if exist.
             if ( false === ( $exchangeRates = get_transient( '_rtp_currency_rates' ) ) ) {
                 // It wasn't there, so get latest currency rates.
-                // Requested file. Could also be e.g. 'currencies.json' or 'historical/2011-01-01.json'
+                
                 $file = 'latest.json';
-                $appId = 'f547b86e7f9248a49d3ad0e3cc64cd6d';
-
+                $base = $edd_options['currency'];
+                
                 // Open CURL session:
-                $ch = curl_init( "http://openexchangerates.org/api/{$file}?app_id={$appId}" );
+                $ch = curl_init( "http://openexchangerates.org/api/{$file}?base={$base}&app_id={$appId}" );
                 curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
 
                 // Get the data:
@@ -558,14 +605,39 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
 
                 // Decode JSON response:
                 $exchangeRates = json_decode( $json );
-
-                set_transient( '_rtp_currency_rates', $exchangeRates->rates, 1 * HOUR_IN_SECONDS );
-
-                $exchangeRates = $exchangeRates->rates;
+                
+                if( isset( $exchangeRates->error ) ) {
+                    return $return = array(
+                        "error"     => true,
+                        "message"   => $exchangeRates->description,
+                    );
+                } else {
+                    set_transient( '_rtp_currency_rates', $exchangeRates->rates, 1 * HOUR_IN_SECONDS );
+                    $exchangeRates = $exchangeRates->rates;
+                }
             }
-
-            $converted_amount = ( $amount * $exchangeRates->$currency );
-
+            
+            return $return = array(
+                "success"     => true,
+                "rates"   => $exchangeRates,
+            );
+        }
+        /**
+         * Doing currency conversion. For example convert USD amount to INR.
+         * @param int   $amount Amount in.
+         * @param string $currency Defualt is INR
+         * @return $converted_amount Converted amount.
+         */
+        public function do_currency_conversion( $amount, $currency = 'INR' ) {
+            global $edd_options;
+            
+            $converted_amount = $amount;
+            if( isset( $edd_options['currency'] ) && 'INR' != $edd_options['currency'] ) {
+                $exchangeRates = $this->get_currency_rate();
+                if( isset( $exchangeRates['success'] ) ) {
+                    $converted_amount = ( $amount * $exchangeRates['rates']->$currency );
+                }
+            }
             return $converted_amount;
         }
         
@@ -581,6 +653,15 @@ if ( ! class_exists( "Shmart_Payment_Gateway" ) ) {
             );
             $action_links = array_merge( $settings, $action_links );
             return $action_links;
+        }
+        
+        /**
+         * Clear currency conversion rates from transient.
+         * @param type $old_value
+         * @param type $value
+         */
+        public function clear_currency_rates( $old_value, $value ) {
+            delete_transient( '_rtp_currency_rates' );
         }
     }
 
