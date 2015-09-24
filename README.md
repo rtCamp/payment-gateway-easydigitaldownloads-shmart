@@ -31,6 +31,6 @@ Shmart only accept INR amount. Once the plugin is activated and respective setti
 
 ### Changelog
 
-** 2015-09-24  1.0 **
+**== 2015-09-24  1.0 ==**
 
 * Initial release with shmart payment gateway settings.
