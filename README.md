@@ -1,14 +1,14 @@
 # Shmart Payment Gateway plugin 
 
 **Tested up to:** 4.3  
-**License:** GPLv2 or later (of-course)  
+**License:** GPLv2 or later.  
 **License URI:** http://www.gnu.org/licenses/gpl-2.0.html  
 
 
 ### Description
 
-This plugin is an extension for Easy Digital Download plugin. Use this plugin to setup shmart payment gateway on your store. The shmart payment gateway (http://shmart.in/) is only available for Indian users. 
-Shmart only accept INR amount. Once the plugin is activated and respective settings saved, on checkout page the shmart payment gateway will be displayed. 
+This plugin is an extension for Easy Digital Download plugin. Use this plugin to setup shmart payment gateway on your store. The shmart payment gateway (http://shmart.in/) is only available for users from India. 
+Shmart only accepts INR currency. Once the plugin is activated and respective settings saved, on checkout page the shmart payment gateway will be displayed. 
 
 ### Requirements
 
