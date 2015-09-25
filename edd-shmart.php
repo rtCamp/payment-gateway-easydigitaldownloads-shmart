@@ -625,6 +625,16 @@ if ( !class_exists( "Shmart_Payment_Gateway" ) ) {
                 if( isset( $exchangeRates['success'] ) ) {
                     $converted_amount = ( $amount * $exchangeRates['rates']->$currency );
                 }
+                /**
+                 * `edd_shmart_currency_conversion` filter.
+                 * Allow users to use different currency conversion api if store currency is not INR.
+                 * $converted_amount amount after currency conversion
+                 * $amount actual amount
+                 * $base_currency is the store currency.
+                 * $currency amount is converted into this currency.
+                 */
+                $base_currency = $edd_options['currency'];
+                $converted_amount = apply_filters( 'edd_shmart_currency_conversion', $converted_amount, $amount, $base_currency, $currency );
             }
             return $converted_amount;
         }
