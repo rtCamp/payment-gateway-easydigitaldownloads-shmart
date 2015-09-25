@@ -149,28 +149,17 @@ if ( !class_exists( "Shmart_Payment_Gateway" ) ) {
          * @param array   $gateways Payment Gateways List
          * @return $gateways
          */
-        public function add_shmart_payment($gateways) {
-            global $edd_options;
-            $front_end = true;
+        public function add_shmart_payment( $gateways ) {
             
-            // If currency is not INR and exchage rates availabel then display payment option in front-end.
-            if( !is_admin() && isset( $edd_options['currency'] ) && 'INR' != $edd_options['currency'] ) {
-                $exchangeRates = $this->get_currency_rate();
-                if( isset( $exchangeRates['error' ] ) ) {
-                    $front_end = false;
-                }
-            }
-            
-            if( is_admin() || $front_end ) {
-                $gateways['shmart'] = array(
-                    'admin_label'       => __( 'Shmart (recommended for Indian users)', 'edd-shmart' ),
-                    'checkout_label'    => __( 'Shmart', 'edd-shmart' ),
-                );
+            $gateways['shmart'] = array(
+                'admin_label'       => __( 'Shmart (recommended for Indian users)', 'edd-shmart' ),
+                'checkout_label'    => __( 'Shmart', 'edd-shmart' ),
+            );
 
-                if( isset( $edd_options['shmart_checkout_label'] ) && !empty( $edd_options['shmart_checkout_label'] ) ) {
-                    $gateways['shmart']['checkout_label'] = __( $edd_options['shmart_checkout_label'], 'edd' );
-                }
+            if( isset( $edd_options['shmart_checkout_label'] ) && !empty( $edd_options['shmart_checkout_label'] ) ) {
+                $gateways['shmart']['checkout_label'] = __( $edd_options['shmart_checkout_label'], 'edd' );
             }
+            
             return $gateways;
         }
 
@@ -243,7 +232,6 @@ if ( !class_exists( "Shmart_Payment_Gateway" ) ) {
          * Add `Shmart` Payment gateway form for user where users fill up personal details.
          */
         public function add_shmart_payment_form() {
-
             do_action( 'edd_after_cc_fields' );
         }
 
