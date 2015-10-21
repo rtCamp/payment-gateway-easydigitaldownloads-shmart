@@ -8,7 +8,21 @@
 ### Description
 
 This plugin is an extension for Easy Digital Download plugin. Use this plugin to setup shmart payment gateway on your store. The shmart payment gateway (http://shmart.in/) is only available for users from India. 
-Shmart only accepts INR currency. Once the plugin is activated and respective settings saved, on checkout page the shmart payment gateway will be displayed. 
+Shmart only accepts INR currency. Once the plugin is activated and respective settings saved, on checkout page the shmart payment gateway will be displayed.
+
+For licensing, [EDD-License-handler](https://github.com/easydigitaldownloads/EDD-License-handler) lib has been used. Use this lib as a git subtree.
+
+First add this repo as a git remote.
+
+    git remote add edd-license-subtree https://github.com/easydigitaldownloads/EDD-License-handler.git
+
+Run following command to add remote repo as subtree
+
+    git subtree add --prefix=lib/edd-license edd-license-subtree master
+
+To pull subtree changes, run following command
+
+    git subtree pull --prefix=lib/edd-license edd-license-subtree master
 
 ### Requirements
 

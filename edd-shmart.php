@@ -59,6 +59,12 @@ if ( !defined( 'SPG_DIRNAME' ) ) {
     define( 'SPG_DIRNAME', dirname( plugin_basename(__FILE__) ) );
 }
 
+// Load the EDD license handler only if not already loaded. Must be placed in the main plugin file
+if( ! class_exists( 'EDD_License' ) )
+	include( SPG_ROOT . 'lib/edd-license/EDD_License_Handler.php' );
+
+$license = new EDD_License( __FILE__, 'Shmart Payment Gateway For EDD', '1.0', 'rtCamp', null, 'https://rtcamp.com' );
+
 /**
  * Shmart_Payment_Gateway
  *
