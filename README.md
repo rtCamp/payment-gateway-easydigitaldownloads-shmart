@@ -45,6 +45,10 @@ To pull subtree changes, run following command
 
 ### Changelog
 
-**== 2015-09-24  1.0 ==**
+**== 2015-10-23  1.0.1 ==**
+
+* Plugin name change
+
+**== 2015-10-21  1.0 ==**
 
 * Initial release with shmart payment gateway settings.
