@@ -319,10 +319,10 @@ if( !class_exists( "Shmart_Payment_Gateway" ) ) {
             // Check the current payment mode
             if( edd_is_test_mode() ) {
                 // Test mode
-                $shmart_uri = $protocal . 'pay.shmart.in/checkout/v1/transactions';
+                $shmart_uri = $protocal . 'pay.shmart.in/checkout/v2/transactions';
             } else {
                 // Live mode
-                $shmart_uri = $protocal . 'pay.shmart.in/checkout/v1/transactions';
+                $shmart_uri = $protocal . 'pay.shmart.in/checkout/v2/transactions';
             }
 
             return apply_filters( 'edd_shmart_uri', $shmart_uri );
