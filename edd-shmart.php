@@ -420,8 +420,11 @@ if( !class_exists( "Shmart_Payment_Gateway" ) ) {
                 // Round up final amount and convert amount into paisa.
                 $amount = ( ceil( $amount ) * 100 );
 
+                //Get server IP address.
+                $ip_address = gethostbyname( $_SERVER['SERVER_NAME'] );
+
                 // String to generate checksum.
-                $checksum_string = $edd_options[ 'shmart_secret_key' ] . $merchant_id . '|' . $edd_options[ 'shmart_apikey' ] . '|' . $_SERVER[ 'SERVER_ADDR' ] . '|' . $merchant_refID . '|' . 'INR' . '|' . $amount . '|' . $checksum_method . '|' . 1;
+                $checksum_string = $edd_options[ 'shmart_secret_key' ] . $merchant_id . '|' . $edd_options[ 'shmart_apikey' ] . '|' . $ip_address . '|' . $merchant_refID . '|' . 'INR' . '|' . $amount . '|' . $checksum_method . '|' . 1;
 
                 // Generate checksum.
                 $checksum = md5( $checksum_string );
@@ -435,7 +438,7 @@ if( !class_exists( "Shmart_Payment_Gateway" ) ) {
                     'merchant_id' => $merchant_id,
                     'checksum_method' => $checksum_method,
                     'checksum' => $checksum,
-                    'ip_address' => $_SERVER[ 'SERVER_ADDR' ],
+                    'ip_address' => $ip_address,
                     'email' => $purchase_data[ 'user_email' ],
                     'mobileNo' => $purchase_data[ 'post_data' ][ 'contact_number' ],
                     'f_name' => $purchase_data[ 'user_info' ][ 'first_name' ],
