@@ -32,7 +32,7 @@ To pull subtree changes, run following command
 
 ### Installation
 
- * Download a plugin from my account section or from email. 
+ * Download a plugin. 
  * Go to WordPress dashboard -> Plugins -> Add New and upload a zip file. 
  * Activate the plugin in your WordPress admin area.
 
@@ -45,6 +45,6 @@ To pull subtree changes, run following command
 
 ### Changelog
 
-**== 2015-09-24  1.0 ==**
+**== 1.0 ==**
 
 * Initial release with shmart payment gateway settings.
