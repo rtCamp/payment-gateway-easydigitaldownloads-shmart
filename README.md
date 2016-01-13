@@ -94,6 +94,18 @@ To pull subtree changes, run following command
  * Enable check box "Shmart (recommended for Indian users)".
  * Fill up all the required values under "Shmart Settings". 
 
+### Screen Shots
+![selection_020](https://cloud.githubusercontent.com/assets/1140051/12292746/454deada-ba15-11e5-895d-8dc5943238ae.png)
+
+![selection_018](https://cloud.githubusercontent.com/assets/1140051/12292750/458c2214-ba15-11e5-99fb-f8daa06feb19.png)
+
+![selection_032](https://cloud.githubusercontent.com/assets/1140051/12292747/454e4c50-ba15-11e5-8873-72fb2d616a1f.png)
+
+![selection_017](https://cloud.githubusercontent.com/assets/1140051/12292748/455886b6-ba15-11e5-89bb-0a5244629e4a.png)
+
+![selection_015](https://cloud.githubusercontent.com/assets/1140051/12292749/455b612e-ba15-11e5-83ba-bd2dd14b8c29.png)
+==========
+
 ### Changelog
 **== Version 1.0.1 ==**
 Change product name and slug
