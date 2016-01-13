@@ -38,7 +38,11 @@ Once the order is placed in Easy Digital Downloads and user select option to mak
  * Enable check box "Shmart (recommended for Indian users)".
  * Fill up all the required values under "Shmart Settings". 
  
-=== Useful links ===
+== Frequently Asked Questions ==
+
+Refer [Wiki page](https://github.com/rtCamp/payment-gateway-easydigitaldownloads-shmart/wiki)
+
+== Screenshots ==
 
 Refer [Wiki page](https://github.com/rtCamp/payment-gateway-easydigitaldownloads-shmart/wiki)
 
@@ -53,3 +57,8 @@ Refer [Wiki page](https://github.com/rtCamp/payment-gateway-easydigitaldownloads
 
 * Initial Release
 * Settings to enable payment gateway.
+
+== Upgrade Notice ==
+= 1.0 = 
+
+Require WordPress 4.0 or above 
