@@ -44,7 +44,9 @@ To pull subtree changes, run following command
  * Fill up all the required values under "Shmart Settings". 
 
 ### Changelog
+**== Version 1.0.1 ==**
+Change product name and slug
 
-**== 1.0 ==**
-
-* Initial release with shmart payment gateway settings.
+**== Version 1.0 ==**
+* Initial Release
+* Settings to enable payment gateway.
