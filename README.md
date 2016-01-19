@@ -1,8 +1,8 @@
-# Shmart Payment Gateway plugin 
+# Shmart Payment Gateway plugin
 
-**Tested up to:** 4.3  
-**License:** GPLv2 or later.  
-**License URI:** http://www.gnu.org/licenses/gpl-2.0.html  
+**Tested up to:** 4.4
+**License:** GPLv2 or later.
+**License URI:** http://www.gnu.org/licenses/gpl-2.0.html
 
 
 ### Description
@@ -18,8 +18,8 @@ Once the order is placed in Easy Digital Downloads and user select option to mak
 ### Requirements
 
 * Easy Digital Download plugin.
-* Shmart approved account to get all the required keys. 
-* https://openexchangerates.org/ free or paid API access to convert foreign currency into INR. 
+* Shmart approved account to get all the required keys.
+* https://openexchangerates.org/ free or paid API access to convert foreign currency into INR.
 
 ### Installation
 
@@ -41,9 +41,15 @@ Refer [Wiki page](https://github.com/rtCamp/payment-gateway-easydigitaldownloads
 ==========
 
 ### Changelog
-**== Version 1.0.1 ==**
-Change product name and slug
 
-**== Version 1.0 ==**
-* Initial Release
-* Settings to enable payment gateway.
+**== 2016-01-06  1.0.2 ==**
+
+* Updated shmart payment gateway api url to v2 version.
+
+**== 2015-10-23  1.0.1 ==**
+
+* Plugin name change
+
+**== 2015-10-21  1.0 ==**
+
+* Initial release with shmart payment gateway settings.

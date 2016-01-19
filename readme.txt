@@ -5,9 +5,9 @@ Donate link: http://rtcamp.com/donate/
 Tags: shmart, gateway, payment, easy digital downloads, EDD
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Requires at least: WordPress 3.6
+Requires at least: WordPress 4.0
 Tested up to: 4.4
-Stable tag: 1.0
+Stable tag: 1.0.2
 
 == Description ==
 
@@ -49,16 +49,18 @@ Refer [Wiki page](https://github.com/rtCamp/payment-gateway-easydigitaldownloads
 ==========
 
 == Changelog ==
-= Version 1.0.1 
 
+= Version 1.0.2 =
+* Updated shmart payment gateway api url to v2 version.
+
+= Version 1.0.1 =
 * Change product name and slug
 
-= Version 1.0 
-
+= Version 1.0 =
 * Initial Release
 * Settings to enable payment gateway.
 
 == Upgrade Notice ==
-= 1.0 = 
 
+= 1.0 =
 Require WordPress 4.0 or above 
