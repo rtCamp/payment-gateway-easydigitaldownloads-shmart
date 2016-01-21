@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Payment Gateway Easy Digital Downloads Shmart
+ * Plugin Name: Shmart Payment Gateway for Easy Digital Downloads
  * Plugin URI: https://github.com/rtCamp/payment-gateway-easydigitaldownloads-shmart
  * Description: Extends Easy Digital Downloads plugin, allowing you to take payments through popular Indian payment gateway service Shmart.
  * Version: 1.0.2

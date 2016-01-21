@@ -1,4 +1,4 @@
-=== Shmart Payment Gateway plugin ===
+=== Shmart Payment Gateway for Easy Digital Downloads ===
 Contributors: rtcamp, nitun.lanjewar, chandrapatel
 
 Donate link: http://rtcamp.com/donate/
