@@ -72,9 +72,6 @@ if ( ! class_exists( 'EDD_License' ) ) {
 	include SPG_ROOT . 'lib/edd-license/EDD_License_Handler.php';
 }
 
-// Update this details on version update otherwise update won't work.
-$license = new EDD_License( __FILE__, 'Easy Digital Downloads - Shmart Payment Gateway', '1.0.1', 'rtCamp', null, 'https://rtcamp.com/' );
-
 /**
  * Shmart_Payment_Gateway
  *
