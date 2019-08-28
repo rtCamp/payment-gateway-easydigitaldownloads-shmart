@@ -62,3 +62,7 @@ Refer [Wiki page](https://github.com/rtCamp/payment-gateway-easydigitaldownloads
 
 #### 1.0 ####
 Require WordPress 4.0 or above 
+
+## Does this interest you?
+
+<a href="https://rtcamp.com/"><img src="https://rtcamp.com/wp-content/uploads/2019/04/github-banner@2x.png" alt="Join us at rtCamp, we specialize in providing high performance enterprise WordPress solutions"></a>
